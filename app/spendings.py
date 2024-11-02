@@ -12,27 +12,55 @@ class Spendings(StatesGroup):
     category = State()
     amount = State()
     date = State()
+    description = State()
 
 
 @router.callback_query(F.data == "test1")
 async def test1(callback_query: CallbackQuery, state: FSMContext):
-    await callback_query.answer("Вы выбрали категорию трат")
-    await state.set_state(Spendings.category)
-    await state.update_data(category=callback_query.data)
-    await state.set_state(Spendings.amount)
-    await callback_query.message.reply("Введите количество потраченых денег")
+    try:
+        await callback_query.answer("Вы выбрали категорию трат")
+        await state.set_state(Spendings.category)
+        await state.update_data(category=callback_query.data)
+        await state.set_state(Spendings.amount)
+        await callback_query.message.reply("Введите количество потраченых денег")
+    except Exception as e:
+        print(e)
+        await state.clear()
+        await callback_query.message.answer("Что-то пошло не так поробуйте снова")
 
 
 @router.message(Spendings.amount)
 async def test1_amount(message: Message, state: FSMContext):
-    await state.update_data(amount=message.text)
-    await state.set_state(Spendings.date)
-    await message.reply("Введите дату траты через пробел")
+    try:
+        amount = abs(float(message.text))
+        await state.update_data(amount=amount)
+        await state.set_state(Spendings.date)
+        await message.reply("Введите дату траты через пробел")
+    except Exception as e:
+        print(e)
+        await state.clear()
+        await message.answer("Что-то пошло не так поробуйте снова")
 
 
 @router.message(Spendings.date)
 async def test1_date(message: Message, state: FSMContext):
-    await state.update_data(date=datetime.strptime(message.text, "%d %m %Y"))
-    data = await state.get_data()
-    await message.reply(f'{data["category"]}, {data["date"]}, {data["amount"]}')
-    await state.clear()
+    try:
+        await state.update_data(date=datetime.strptime(message.text, "%d %m %Y"))
+        await state.set_state(Spendings.description)
+        await message.reply("Введите описание для потраченых денег")
+    except Exception as e:
+        print(e)
+        await state.clear()
+        await message.answer("Что-то пошло не так поробуйте снова")
+
+@router.message(Spendings.description)
+async def test1_date(message: Message, state: FSMContext):
+    try:
+        await state.update_data(description=message.text)
+        data = await state.get_data()
+        await message.reply(f'{data["category"]}, {data["date"]}, {data["amount"]}, {data["description"]}')
+        await state.clear()
+    except Exception as e:
+        print(e)
+        await state.clear()
+        await message.answer("Что-то пошло не так поробуйте снова")
