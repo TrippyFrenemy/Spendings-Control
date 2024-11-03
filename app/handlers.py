@@ -3,12 +3,14 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
 
 import app.keyboards as kb
+import app.db.requests as rq
 
 router = Router()
 
 
 @router.message(CommandStart())
 async def echo(message: Message):
+    await rq.set_user(message.from_user.id)
     await message.answer("Привет!", reply_markup=kb.main)
 
 
