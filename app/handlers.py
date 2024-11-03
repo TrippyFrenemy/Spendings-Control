@@ -21,9 +21,9 @@ async def help_message(message: Message):
 
 @router.message(F.text == "Траты")
 async def spendings(message: Message):
-    await message.reply("Выберите категорию трат", reply_markup=kb.spendings)
+    await message.reply("Выберите категорию трат", reply_markup=await kb.categories())
 
 
 @router.message(F.text == "Заработок")
 async def earns(message: Message):
-    await message.reply("Выберите категорию заработка", reply_markup=kb.earns)
+    await message.reply("Выберите категорию заработка", reply_markup=await kb.categories())

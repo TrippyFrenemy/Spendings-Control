@@ -15,8 +15,8 @@ class Spendings(StatesGroup):
     description = State()
 
 
-@router.callback_query(F.data == "test1")
-async def test1(callback_query: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith("category_"))
+async def spends(callback_query: CallbackQuery, state: FSMContext):
     try:
         await callback_query.answer("Вы выбрали категорию трат")
         await state.set_state(Spendings.category)
@@ -30,7 +30,7 @@ async def test1(callback_query: CallbackQuery, state: FSMContext):
 
 
 @router.message(Spendings.amount)
-async def test1_amount(message: Message, state: FSMContext):
+async def spends_amount(message: Message, state: FSMContext):
     try:
         amount = abs(float(message.text))
         await state.update_data(amount=amount)
@@ -43,7 +43,7 @@ async def test1_amount(message: Message, state: FSMContext):
 
 
 @router.message(Spendings.date)
-async def test1_date(message: Message, state: FSMContext):
+async def spends_date(message: Message, state: FSMContext):
     try:
         await state.update_data(date=datetime.strptime(message.text, "%d %m %Y"))
         await state.set_state(Spendings.description)
@@ -53,8 +53,9 @@ async def test1_date(message: Message, state: FSMContext):
         await state.clear()
         await message.answer("Что-то пошло не так поробуйте снова")
 
+
 @router.message(Spendings.description)
-async def test1_date(message: Message, state: FSMContext):
+async def spends_date(message: Message, state: FSMContext):
     try:
         await state.update_data(description=message.text)
         data = await state.get_data()
