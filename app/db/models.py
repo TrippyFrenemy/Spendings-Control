@@ -4,7 +4,9 @@ from sqlalchemy import BigInteger, Integer, String, ForeignKey, Boolean, Float, 
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
-engine = create_async_engine(url="sqlite+aiosqlite:///db.sqlite3")
+from config import DB_DRIVER, DB_USER, DB_PASS, DB_HOST, DB_NAME
+
+engine = create_async_engine(url=f"{DB_DRIVER}://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
 
 async_session = async_sessionmaker(engine)
 
@@ -25,6 +27,8 @@ class Category(Base):
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     name = mapped_column(String(50), unique=True)
+    user_id = mapped_column(Integer, ForeignKey("users.id"))
+    type = mapped_column(Boolean)
 
 
 class Item(Base):
