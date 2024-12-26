@@ -35,7 +35,7 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
 
 ## Project Structure
 ```
-project/
+Cost-Control/
 ├── app/
 │   ├── db/
 │   │   ├── models.py      # Database models and session management
@@ -44,6 +44,10 @@ project/
 │   ├── keyboards.py       # Telegram keyboard layouts
 │   └── spendings.py       # Expense tracking logic
 ├── migration/             # Database migrations
+│   ├── vesrsions/         # Migration version
+│   ├── env.py             # Alembic environment variables
+│   ├── README
+│   └── script.py.mako
 ├── .env                   # Environment variables
 ├── .gitignore
 ├── alembic.ini           # Alembic configuration
@@ -61,8 +65,8 @@ project/
 2. **Environment Setup**
    ```bash
    # Clone the repository
-   git clone [repository-url]
-   cd expense-tracker-bot
+   git clone https://github.com/TrippyFrenemy/Cost-Control
+   cd Cost-Control
 
    # Create virtual environment
    python -m venv venv
