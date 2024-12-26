@@ -1,4 +1,3 @@
-```markdown
 # Telegram Expense Tracker Bot
 
 A comprehensive Telegram bot for tracking personal expenses with detailed reporting and analytics capabilities.
@@ -36,7 +35,6 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
 
 ## Project Structure
 
-```
 project/
 ├── app/
 │   ├── db/
@@ -52,7 +50,6 @@ project/
 ├── config.py             # Application configuration
 ├── main.py               # Application entry point
 └── requirements.txt
-```
 
 ## Setup Guide
 
@@ -171,6 +168,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [aiogram](https://docs.aiogram.dev/) for the Telegram Bot framework
 - [SQLAlchemy](https://www.sqlalchemy.org/) for the ORM
 - [Matplotlib](https://matplotlib.org/) for data visualization
-```
 
 This README provides a comprehensive overview of the project, including its features, setup instructions, usage guidelines, and future improvements. It helps new users and contributors understand the project structure and get started quickly.
