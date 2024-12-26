@@ -34,7 +34,7 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
   - Logging for debugging
 
 ## Project Structure
-
+```
 project/
 ├── app/
 │   ├── db/
@@ -50,7 +50,7 @@ project/
 ├── config.py             # Application configuration
 ├── main.py               # Application entry point
 └── requirements.txt
-
+```
 ## Setup Guide
 
 1. **Prerequisites**
