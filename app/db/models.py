@@ -1,48 +1,64 @@
+from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import AsyncGenerator
 
-from sqlalchemy import BigInteger, Integer, String, ForeignKey, Boolean, Float, DateTime
-from sqlalchemy.orm import DeclarativeBase, mapped_column
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy import BigInteger, Integer, String, ForeignKey, Float, DateTime, Column, Index
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from config import DB_DRIVER, DB_USER, DB_PASS, DB_HOST, DB_NAME
 
 engine = create_async_engine(url=f"{DB_DRIVER}://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
 
-async_session = async_sessionmaker(engine)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
-
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
+Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = 'users'
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    tg_id = mapped_column(BigInteger, unique=True)
-
-
-class Category(Base):
-    __tablename__ = "categories"
-
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name = mapped_column(String(50), unique=True)
-    user_id = mapped_column(Integer, ForeignKey("users.id"))
-    type = mapped_column(Boolean)
+    id = Column(BigInteger, primary_key=True)  # Telegram user id
+    username = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
-class Item(Base):
-    __tablename__ = "items"
+class Expense(Base):
+    __tablename__ = 'expenses'
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    description = mapped_column(String(150))
-    amount = mapped_column(Float, default=0.0)
-    date = mapped_column(DateTime)
-    category_id = mapped_column(Integer, ForeignKey("categories.id"))
-    type = mapped_column(Boolean)
-    user_id = mapped_column(Integer, ForeignKey("users.id"))
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    day = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False)
+    amount = Column(Float, nullable=False)
+    category = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_expense_user_year', 'user_id', 'year'),
+        Index('idx_expense_user_year_month', 'user_id', 'year', 'month'),
+        Index('idx_expense_date', 'user_id', 'year', 'month', 'day'),
+    )
 
 
 async def async_main():
     async with engine.begin() as session:
         await session.run_sync(Base.metadata.create_all)
+
+
+@asynccontextmanager
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Async context manager for database sessions.
+    Properly handles session creation and cleanup.
+
+    Usage:
+        async with get_async_session() as session:
+            # Use session here
+    """
+    session = async_session()
+    try:
+        yield session
+    finally:
+        await session.close()
