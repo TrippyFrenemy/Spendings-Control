@@ -1,0 +1,43 @@
+version: '3.11'
+
+services:
+  bot:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - API_TOKEN=${API_TOKEN}
+      - DB_DRIVER=postgresql+asyncpg
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - bot_network
+
+  db:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
+    driver: bridge

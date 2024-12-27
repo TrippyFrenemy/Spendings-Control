@@ -68,7 +68,7 @@ async def generate_yearly_report(message: Message, year: int) -> None:
 
         # Send report
         await message.answer_photo(
-            BufferedInputFile(buf.getvalue(), filename="yearly_report.png"),
+            BufferedInputFile(buf.getvalue(), filename=f"yearly_report_{message.chat.id}.png"),
             caption=summary
         )
 
@@ -122,7 +122,7 @@ async def generate_monthly_report(message: Message, year: int, month: int) -> No
 
         # Send report
         await message.answer_photo(
-            BufferedInputFile(buf.getvalue(), filename="monthly_report.png"),
+            BufferedInputFile(buf.getvalue(), filename=f"monthly_report_{message.chat.id}.png"),
             caption=summary
         )
 
