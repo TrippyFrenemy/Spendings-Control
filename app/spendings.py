@@ -1,14 +1,12 @@
 import io
 import logging
-from datetime import datetime
 import calendar
 import pandas as pd
 import matplotlib.pyplot as plt
 from aiogram.types import BufferedInputFile, Message
-from typing import Tuple, List
 
 from app.db.models import get_async_session
-from app.db.requests import get_yearly_expenses, get_monthly_expenses
+from app.db.repositories.expense_repository import get_yearly_expenses, get_monthly_expenses
 
 logger = logging.getLogger(__name__)
 
