@@ -5,13 +5,12 @@ from typing import AsyncGenerator
 from sqlalchemy import BigInteger, Integer, String, ForeignKey, Float, DateTime, Column, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import relationship
 
 from config import DB_DRIVER, DB_USER, DB_PASS, DB_HOST, DB_NAME
 
 engine = create_async_engine(url=f"{DB_DRIVER}://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
-
 async_session = async_sessionmaker(engine, expire_on_commit=False)
-
 Base = declarative_base()
 
 
@@ -21,6 +20,23 @@ class User(Base):
     id = Column(BigInteger, primary_key=True)  # Telegram user id
     username = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    categories = relationship("Category", back_populates="user")
+
+
+class Category(Base):
+    __tablename__ = 'categories'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="categories")
+    expenses = relationship("Expense", back_populates="category")
+
+    __table_args__ = (
+        Index('idx_category_user', 'user_id'),
+    )
 
 
 class Expense(Base):
@@ -28,12 +44,15 @@ class Expense(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
     day = Column(Integer, nullable=False)
     month = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
     amount = Column(Float, nullable=False)
-    category = Column(String, nullable=False)
+    description = Column(String, nullable=True)  # Optional description field
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    category = relationship("Category", back_populates="expenses")
 
     __table_args__ = (
         Index('idx_expense_user_year', 'user_id', 'year'),
@@ -52,10 +71,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Async context manager for database sessions.
     Properly handles session creation and cleanup.
-
-    Usage:
-        async with get_async_session() as session:
-            # Use session here
     """
     session = async_session()
     try:
