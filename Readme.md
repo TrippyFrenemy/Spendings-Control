@@ -76,22 +76,41 @@ After sending, select a category from the provided buttons.
 Cost-Control/
 ├── app/
 │   ├── db/
-│   │   ├── models.py      # Database models and session management
-│   │   └── requests.py    # Database queries and operations
-│   ├── handlers.py        # Telegram message/callback handlers
-│   ├── keyboards.py       # Telegram keyboard layouts
-│   └── spendings.py       # Expense tracking logic
-├── migration/             # Database migrations
-│   ├── vesrsions/         # Migration version
-│   ├── env.py             # Alembic environment variables
+│   │   ├── repositories/           # Database operations by entity
+│   │   │   ├── category_repository.py
+│   │   │   ├── expense_repository.py
+│   │   │   ├── date_repository.py
+│   │   │   └── user_repository.py
+│   │   └── models.py              # Database models and session management
+│   ├── handlers/                  # Telegram handlers by functionality
+│   │   ├── base.py               # Basic command handlers
+│   │   ├── category.py           # Category management handlers
+│   │   ├── deletion.py           # Expense deletion handlers
+│   │   ├── expense.py            # Expense recording handlers
+│   │   ├── reports.py            # Report generation handlers
+│   │   └── __init__.py           # Handler registration
+│   ├── keyboards/                 # Telegram keyboard layouts
+│   │   ├── base.py               # Main keyboard
+│   │   ├── category.py           # Category-related keyboards
+│   │   ├── deletion.py           # Deletion confirmation keyboards
+│   │   ├── reports.py            # Report selection keyboards
+│   │   └── __init__.py           # Keyboard exports
+│   └── spendings.py              # Report generation and visualization
+├── migration/                     # Database migrations
+│   ├── versions/                  # Migration versions
+│   ├── env.py                    # Alembic environment
 │   ├── README
-│   └── script.py.mako
-├── .env                   # Environment variables
-├── .gitignore
-├── alembic.ini           # Alembic configuration
-├── config.py             # Application configuration
-├── main.py               # Application entry point
-└── requirements.txt
+│   └── script.py.mako            # Migration template
+├── .dockerignore                 # Docker ignore rules
+├── .env                          # Environment variables
+├── .gitignore                    # Git ignore rules
+├── alembic.ini                   # Alembic configuration
+├── config.py                     # Application configuration
+├── docker-compose.yml            # Docker compose configuration
+├── Dockerfile                    # Docker build instructions
+├── main.py                       # Application entry point
+├── README.md                     # Project documentation
+└── requirements.txt              # Python dependencies
 ```
 
 ## Setup Guide
