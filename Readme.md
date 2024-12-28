@@ -1,13 +1,22 @@
 # Telegram Expense Tracker Bot
 
-A comprehensive Telegram bot for tracking personal expenses with detailed reporting and analytics capabilities.
+A comprehensive Telegram bot for tracking personal expenses with detailed reporting, analytics capabilities, and flexible category management.
 
 ## Features
 
-- **Expense Tracking**
-  - Quick expense recording with date, amount, and category
-  - Support for different expense categories
+- **Smart Expense Tracking**
+  - Quick expense recording with intuitive format
+  - Interactive category selection via buttons
+  - Support for custom categories
+  - Optional expense descriptions
   - Automatic date parsing and validation
+
+- **Category Management**
+  - Default categories for new users
+  - Add custom categories
+  - Safe category deletion with expense reassignment
+  - Change expense categories after creation
+  - Category-based expense analysis
 
 - **Reporting & Analytics**
   - Monthly expense reports with charts
@@ -21,6 +30,35 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
   - Delete individual expenses
   - Total spending overview
   - Date-wise expense filtering
+  - Change expense categories
+
+## Usage Guide
+
+### Basic Commands
+- `/start` - Initialize the bot and get instructions
+- `/change DD.MM.YY` - Change category for expenses on specific date
+- `/delete DD.MM.YY` - Delete expenses from specific date
+
+### Recording Expenses
+```
+Format: DD.MM.YY amount description
+Example: 26.12.24 500 coffee with friends
+
+After sending, select a category from the provided buttons.
+```
+
+### Category Management
+- Click "📝 Manage Categories" to:
+  - View all categories
+  - Add new categories
+  - Delete categories (expenses will be moved to another category)
+  - Change expense categories
+
+### Reports
+- Monthly Report: View expenses by category with charts
+- Yearly Report: See yearly trends and category distribution
+- Last 5 Expenses: Quick overview of recent spending
+- Total Spent: Overall spending summary
 
 ## Technical Stack
 
@@ -55,6 +93,7 @@ Cost-Control/
 ├── main.py               # Application entry point
 └── requirements.txt
 ```
+
 ## Setup Guide
 
 1. **Prerequisites**
@@ -64,22 +103,17 @@ Cost-Control/
 
 2. **Environment Setup**
    ```bash
-   # Clone the repository
    git clone https://github.com/TrippyFrenemy/Cost-Control
    cd Cost-Control
-
-   # Create virtual environment
    python -m venv venv
    source venv/bin/activate  # Unix
    # or
    .\venv\Scripts\activate  # Windows
-
-   # Install dependencies
    pip install -r requirements.txt
    ```
 
 3. **Configuration**
-   Create a `.env` file with the following variables:
+   Create a `.env` file:
    ```
    API_TOKEN=your_telegram_bot_token
    DB_DRIVER=postgresql+asyncpg
@@ -91,58 +125,40 @@ Cost-Control/
 
 4. **Database Setup**
    ```bash
-   # Initialize migrations
-   alembic init alembic
-
-   # Create initial migration
-   alembic revision --autogenerate -m "Initial migration"
-
-   # Apply migrations
    alembic upgrade head
    ```
 
-5. **Running the Bot**
+5. **Running with Docker**
    ```bash
-   python main.py
+   docker-compose up -d
    ```
 
-## Usage
+## Default Categories
+New users get these default categories:
+- Food
+- Transport
+- Entertainment
+- Shopping
+- Bills
+- Other
 
-1. **Start the Bot**
-   - Send `/start` to initialize the bot
-   - You'll receive a welcome message with basic instructions
-
-2. **Recording Expenses**
-   ```
-   Format: DD.MM.YY amount category
-   Example: 26.12.23 500 coffee
-   ```
-
-3. **View Reports**
-   - Use the keyboard buttons to access different reports:
-     - 📊 Monthly Report
-     - 📅 Yearly Report
-     - 💰 Total Spent
-     - 🔍 Last 5 Expenses
-
-4. **Delete Expenses**
-   - Use ❌ Delete Expense button for today's expenses
-   - Use `/delete DD.MM.YY` for specific dates
+You can add, delete, or modify categories through the bot interface.
 
 ## Error Handling
 
 The bot includes comprehensive error handling for:
 - Invalid date formats
 - Incorrect amount inputs
+- Category management errors
 - Database connection issues
-- Invalid categories
 - Session management
 
 ## Logging
 
 Detailed logging is implemented for:
 - User actions
-- Database operations
+- Category operations
+- Database queries
 - Error tracking
 - Performance monitoring
 
@@ -151,9 +167,9 @@ Detailed logging is implemented for:
 - Multiple currency support
 - Budget setting and tracking
 - Export functionality
-- Category customization
-- Expense statistics and trends
+- Category statistics and trends
 - Backup and restore functionality
+- Budget alerts and notifications
 
 ## Contributing
 
@@ -166,11 +182,3 @@ Detailed logging is implemented for:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [aiogram](https://docs.aiogram.dev/) for the Telegram Bot framework
-- [SQLAlchemy](https://www.sqlalchemy.org/) for the ORM
-- [Matplotlib](https://matplotlib.org/) for data visualization
-
-This README provides a comprehensive overview of the project, including its features, setup instructions, usage guidelines, and future improvements. It helps new users and contributors understand the project structure and get started quickly.
