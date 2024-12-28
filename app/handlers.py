@@ -80,9 +80,12 @@ async def cmd_start(message: types.Message) -> None:
 
     await message.answer(
         'Welcome to the Expense Tracker Bot!\n\n'
-        'To record an expense, use the format:\n'
-        'DD.MM.YY amount description\n'
-        'Example: 26.12.23 500 coffee with friends\n\n'
+        'To record an expense, use either format:\n'
+        '1. DD.MM.YY amount description\n'
+        '2. amount description (uses today\'s date)\n\n'
+        'Examples:\n'
+        '26.12.24 500 coffee with friends\n'
+        '500 coffee with friends\n\n'
         'You\'ll then be prompted to select a category for the expense.\n\n'
         'Use the keyboard below to access reports and manage your expenses.',
         reply_markup=get_main_keyboard()
@@ -100,14 +103,19 @@ async def handle_expense(message: types.Message) -> None:
             raise ValueError("Not enough arguments")
 
         # Parse date
-        date = datetime.strptime(parts[0], '%d.%m.%y')
+        # Check if the first part is a date or amount
+        try:
+            # Try to parse first part as date
+            date = datetime.strptime(parts[0], '%d.%m.%y')
+            amount = float(parts[1])
+            description = parts[2] if len(parts) > 2 else None
+        except ValueError:
+            # If first part is not a date, use today's date
+            date = datetime.now()
+            amount = float(parts[0])
+            description = parts[1] if len(parts) > 1 else None
+
         year = 2000 + date.year % 100
-
-        # Parse amount
-        amount = float(parts[1])
-
-        # Get description (optional)
-        description = parts[2] if len(parts) > 2 else None
 
         # Create temporary data string for callback
         expense_data = f"{date.day},{date.month},{year},{amount}"
@@ -124,8 +132,12 @@ async def handle_expense(message: types.Message) -> None:
     except ValueError as e:
         logger.error(f"Value error in handle_expense: {e}")
         await message.answer(
-            "❌ Invalid format. Please use: DD.MM.YY amount description\n"
-            "Example: 26.12.23 500 coffee with friends"
+            "❌ Invalid format. Please use either:\n"
+            "1. DD.MM.YY amount description\n"
+            "2. amount description\n"
+            "Examples:\n"
+            "26.12.23 500 coffee with friends\n"
+            "500 coffee with friends"
         )
     except Exception as e:
         logger.error(f"Unexpected error in handle_expense: {e}")
