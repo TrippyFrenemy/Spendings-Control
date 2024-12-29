@@ -19,10 +19,12 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
   - Category-based expense analysis
 
 - **Reporting & Analytics**
-  - Monthly expense reports with charts
-  - Yearly expense summaries
-  - Category-wise breakdowns
+  - Three types of reports:
+    - Daily breakdown with detailed expense tracking
+    - Monthly reports with category breakdown
+    - Yearly summaries with trends analysis
   - Visual representations using charts and graphs
+  - Category-wise spending analysis
   - Percentage calculations for better insights
 
 - **Data Management**
@@ -44,21 +46,45 @@ A comprehensive Telegram bot for tracking personal expenses with detailed report
 Format: DD.MM.YY amount description
 Example: 26.12.24 500 coffee with friends
 
+Alternative format (uses today's date):
+Format: amount description
+Example: 500 coffee with friends
+
 After sending, select a category from the provided buttons.
 ```
 
-### Category Management
-- Click "📝 Manage Categories" to:
-  - View all categories
-  - Add new categories
-  - Delete categories (expenses will be moved to another category)
-  - Change expense categories
+### Accessing Reports
+The bot provides three main types of reports accessible from the main menu:
+- 📈 Daily Breakdown: Detailed day-by-day expense tracking
+- 📊 Monthly Report: Category-wise breakdown for chosen month
+- 📅 Yearly Report: Annual overview with trends
 
-### Reports
-- Monthly Report: View expenses by category with charts
-- Yearly Report: See yearly trends and category distribution
-- Last 5 Expenses: Quick overview of recent spending
-- Total Spent: Overall spending summary
+Each report type offers:
+- Interactive year/month selection
+- Visual charts and graphs
+- Detailed breakdowns and statistics
+- Total spent calculations
+
+### Category Management
+Use "📝 Manage Categories" to:
+- View all categories
+- Add new categories
+- Delete categories (expenses will be moved to another category)
+- Change expense categories
+
+### Quick Actions
+- 💰 Total Spent: View total expenses across all time
+- 🔍 Last 5 Expenses: Quick overview of recent spending
+- ❌ Delete Expense: Remove specific expenses
+
+## Default Categories
+New users get these default categories:
+- Продукты (Groceries)
+- Бензин (Fuel)
+- Кофе (Coffee)
+- Рестораны (Restaurants)
+- Обучение (Education)
+- Other
 
 ## Technical Stack
 
@@ -69,33 +95,18 @@ After sending, select a category from the provided buttons.
 - **Additional Tools**: 
   - Alembic for database migrations
   - Python-dotenv for configuration
-  - Logging for debugging
+  - Docker for containerization
 
 ## Project Structure
 ```
 Cost-Control/
 ├── app/
 │   ├── db/
-│   │   ├── repositories/           # Database operations by entity
-│   │   │   ├── category_repository.py
-│   │   │   ├── expense_repository.py
-│   │   │   ├── date_repository.py
-│   │   │   └── user_repository.py
-│   │   └── models.py              # Database models and session management
-│   ├── handlers/                  # Telegram handlers by functionality
-│   │   ├── base.py               # Basic command handlers
-│   │   ├── category.py           # Category management handlers
-│   │   ├── deletion.py           # Expense deletion handlers
-│   │   ├── expense.py            # Expense recording handlers
-│   │   ├── reports.py            # Report generation handlers
-│   │   └── __init__.py           # Handler registration
-│   ├── keyboards/                 # Telegram keyboard layouts
-│   │   ├── base.py               # Main keyboard
-│   │   ├── category.py           # Category-related keyboards
-│   │   ├── deletion.py           # Deletion confirmation keyboards
-│   │   ├── reports.py            # Report selection keyboards
-│   │   └── __init__.py           # Keyboard exports
-│   └── spendings.py              # Report generation and visualization
+│   │   ├── repositories/           # Database operations
+│   │   └── models.py              # Database models
+│   ├── handlers/                  # Telegram handlers
+│   ├── keyboards/                 # Keyboard layouts
+│   └── spendings.py              # Report generation
 ├── migration/                     # Database migrations
 │   ├── versions/                  # Migration versions
 │   ├── env.py                    # Alembic environment
@@ -119,6 +130,7 @@ Cost-Control/
    - Python 3.8+
    - PostgreSQL database
    - Telegram Bot Token (from @BotFather)
+   - Docker and Docker Compose (optional)
 
 2. **Environment Setup**
    ```bash
@@ -133,7 +145,7 @@ Cost-Control/
 
 3. **Configuration**
    Create a `.env` file:
-   ```
+   ```env
    API_TOKEN=your_telegram_bot_token
    DB_DRIVER=postgresql+asyncpg
    DB_USER=your_db_user
@@ -142,26 +154,17 @@ Cost-Control/
    DB_NAME=your_db_name
    ```
 
-4. **Database Setup**
-   ```bash
-   alembic upgrade head
-   ```
-
-5. **Running with Docker**
+4. **Running the Bot**
+   
+   With Docker:
    ```bash
    docker-compose up -d
    ```
 
-## Default Categories
-New users get these default categories:
-- Food
-- Transport
-- Entertainment
-- Shopping
-- Bills
-- Other
-
-You can add, delete, or modify categories through the bot interface.
+   Without Docker:
+   ```bash
+   python main.py
+   ```
 
 ## Error Handling
 
@@ -170,7 +173,7 @@ The bot includes comprehensive error handling for:
 - Incorrect amount inputs
 - Category management errors
 - Database connection issues
-- Session management
+- API communication errors
 
 ## Logging
 
@@ -180,15 +183,6 @@ Detailed logging is implemented for:
 - Database queries
 - Error tracking
 - Performance monitoring
-
-## Future Improvements
-
-- Multiple currency support
-- Budget setting and tracking
-- Export functionality
-- Category statistics and trends
-- Backup and restore functionality
-- Budget alerts and notifications
 
 ## Contributing
 
@@ -200,4 +194,4 @@ Detailed logging is implemented for:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
