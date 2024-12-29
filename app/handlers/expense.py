@@ -10,13 +10,13 @@ from app.keyboards import create_category_selection_keyboard
 logger = logging.getLogger(__name__)
 
 
-def parse_date_from_text(parts: list) -> datetime:
+def parse_date_from_text(parts: list) -> tuple[datetime, bool]:
     """Parse date from message parts."""
     try:
         date = datetime.strptime(parts[0], '%d.%m.%y')
-        return date
+        return date, True
     except ValueError:
-        return datetime.now()
+        return datetime.now(), False
 
 
 def parse_amount_and_description(parts: list, has_date: bool) -> tuple:
@@ -46,8 +46,8 @@ async def handle_expense(message: types.Message) -> None:
         if len(parts) < 2:
             raise ValueError("Not enough arguments")
 
-        date = parse_date_from_text(parts)
-        amount, description = parse_amount_and_description(parts, date is not None)
+        date, has_date = parse_date_from_text(parts)
+        amount, description = parse_amount_and_description(parts, has_date)
         expense_data = create_expense_data(date, amount, description)
 
         keyboard = await create_category_selection_keyboard(message.from_user.id, expense_data)
