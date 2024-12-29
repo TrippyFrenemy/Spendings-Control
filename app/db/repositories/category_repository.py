@@ -1,9 +1,12 @@
+from typing import List, Optional, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
-from typing import List, Optional, Dict
 from app.db.models import Category, Expense
+from app.db.redis.cache_helpers import invalidate_expense_caches
+from app.db.redis.redis_client import redis_cache
 
 
+@redis_cache(prefix="categories", expire=3600)
 async def get_user_categories(session: AsyncSession, user_id: int) -> List[Category]:
     """Get all categories for a user."""
     query = select(Category).where(Category.user_id == user_id).order_by(Category.name)
@@ -11,6 +14,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> List[Categ
     return result.scalars().all()
 
 
+@redis_cache(prefix="category", expire=1800)
 async def get_category_by_id(session: AsyncSession, category_id: int, user_id: int) -> Optional[Category]:
     """Get specific category by ID for a user."""
     query = select(Category).where(
@@ -38,6 +42,9 @@ async def add_category(session: AsyncSession, user_id: int, name: str) -> Catego
     category = Category(user_id=user_id, name=name.strip())
     session.add(category)
     await session.commit()
+
+    # Invalidate caches
+    await get_user_categories.invalidate_cache(session, user_id)
     return category
 
 
@@ -52,11 +59,15 @@ async def update_category(session: AsyncSession, category_id: int, user_id: int,
 
     category.name = new_name.strip()
     await session.commit()
+
+    # Invalidate caches
+    await get_user_categories.invalidate_cache(session, user_id)
+    await get_category_by_id.invalidate_cache(session, category_id, user_id)
     return category
 
 
 async def delete_category(session: AsyncSession, category_id: int, user_id: int,
-                         new_category_id: Optional[int] = None) -> bool:
+                          new_category_id: Optional[int] = None) -> bool:
     """Delete category and optionally move its expenses to another category."""
     category = await get_category_by_id(session, category_id, user_id)
     if not category:
@@ -88,9 +99,15 @@ async def delete_category(session: AsyncSession, category_id: int, user_id: int,
 
     await session.delete(category)
     await session.commit()
+
+    # Invalidate all related caches
+    await get_user_categories.invalidate_cache(session, user_id)
+    await get_category_by_id.invalidate_cache(session, category_id, user_id)
+    await invalidate_expense_caches(session, user_id)
     return True
 
 
+@redis_cache(prefix="category_stats", expire=1800)
 async def get_category_statistics(session: AsyncSession, user_id: int, category_id: int) -> Dict:
     """Get statistics for a specific category."""
     category = await get_category_by_id(session, category_id, user_id)

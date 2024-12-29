@@ -1,10 +1,13 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher
 
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
+
+from app.db.models import async_main
+from app.db.redis.redis_client import redis
 from app.handlers import register_all_handlers
 from config import API_TOKEN
-from app.db.models import async_main
 
 # Set up logging configuration for the entire application
 logging.basicConfig(
@@ -21,7 +24,8 @@ async def main():
     """
     # Initialize bot and dispatcher
     bot = Bot(token=API_TOKEN)
-    dp = Dispatcher()
+
+    dp = Dispatcher(storage=RedisStorage(redis), bot=bot)
 
     # Register all message and callback handlers
     register_all_handlers(dp)
