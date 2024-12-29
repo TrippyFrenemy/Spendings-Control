@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.redis.redis_client import redis
+from app.db.redis.report_image_cache import invalidate_report_images
 
 
 async def invalidate_expense_caches(session: AsyncSession, user_id: int, year: Optional[int] = None,
@@ -29,6 +30,9 @@ async def invalidate_expense_caches(session: AsyncSession, user_id: int, year: O
         keys = await redis.keys(pattern)
         if keys:
             await redis.delete(*keys)
+
+    # Also invalidate report images
+    await invalidate_report_images(user_id, year, month)
 
 
 async def invalidate_category_caches(session: AsyncSession, user_id: int):

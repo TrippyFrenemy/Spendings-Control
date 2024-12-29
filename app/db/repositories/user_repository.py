@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -8,7 +8,7 @@ from app.db.redis.redis_client import redis_cache
 
 
 @redis_cache(prefix="user", expire=3600)
-async def get_or_create_user(session: AsyncSession, user_id: int, username: Optional[str] = None) -> User:
+async def get_or_create_user(session: AsyncSession, user_id: int, username: Optional[str] = None) -> Dict:
     """Get existing user or create new one with default categories."""
     user = await session.get(User, user_id)
     if not user:
@@ -20,10 +20,14 @@ async def get_or_create_user(session: AsyncSession, user_id: int, username: Opti
             session.add(category)
         session.add(user)
         await session.commit()
-
-        # Invalidate user categories cache
         await get_user_categories.invalidate_cache(session, user_id)
-    return user
+
+    # Convert to dictionary for JSON serialization
+    return {
+        "id": user.id,
+        "username": user.username,
+        "created_at": user.created_at.isoformat() if user.created_at else None
+    }
 
 
 @redis_cache(prefix="total_spent", expire=1800)
@@ -31,4 +35,4 @@ async def get_total_spent(session: AsyncSession, user_id: int) -> float:
     """Get total amount spent by user."""
     query = select(func.sum(Expense.amount)).where(Expense.user_id == user_id)
     result = await session.execute(query)
-    return result.scalar() or 0.0
+    return float(result.scalar() or 0.0)

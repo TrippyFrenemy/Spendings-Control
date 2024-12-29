@@ -94,10 +94,10 @@ async def last_expenses(message: types.Message) -> None:
         text = "Last 5 expenses:\n\n"
         for expense in expenses:
             text += (
-                f"📅 {expense.day:02d}.{expense.month:02d}.{expense.year}\n"
-                f"💵 {expense.amount:.2f} UAH - {expense.category.name}\n"
+                f"📅 {expense['day']:02d}.{expense['month']:02d}.{expense['year']}\n"
+                f"💵 {expense['amount']:.2f} UAH - {expense['category']['name']}\n"
             )
-            if expense.description:
-                text += f"📝 {expense.description}\n"
+            if expense['description']:
+                text += f"📝 {expense['description']}\n"
             text += "\n"
         await message.answer(text)

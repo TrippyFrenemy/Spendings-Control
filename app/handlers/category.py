@@ -12,7 +12,8 @@ from app.db.repositories.category_repository import (
     get_category_by_id,
     delete_category
 )
-from app.db.repositories.expense_repository import get_last_expenses, get_expense_by_id, get_expenses_by_date
+from app.db.repositories.expense_repository import get_last_expenses, get_expense_by_id, get_expenses_by_date, \
+    update_expense_category
 from app.keyboards import create_category_management_keyboard, create_category_selection_keyboard, \
     create_category_selection_keyboard_for_change
 
@@ -106,8 +107,8 @@ async def delete_category_handler(callback: types.CallbackQuery) -> None:
             return
 
         other_category = next(
-            (cat for cat in categories if cat.name == "Other" and cat.id != category_id),
-            next((cat for cat in categories if cat.id != category_id), None)
+            (cat for cat in categories if cat["name"] == "Other" and cat["id"] != category_id),
+            next((cat for cat in categories if cat["id"] != category_id), None)
         )
 
         if not other_category:
@@ -122,7 +123,7 @@ async def delete_category_handler(callback: types.CallbackQuery) -> None:
                 session,
                 category_id,
                 callback.from_user.id,
-                other_category.id
+                other_category["id"]
             )
 
             if result:
@@ -135,7 +136,7 @@ async def delete_category_handler(callback: types.CallbackQuery) -> None:
                     reply_markup=keyboard
                 )
                 await callback.answer(
-                    f"Category deleted. Expenses moved to {other_category.name}",
+                    f"Category deleted. Expenses moved to {other_category['name']}",
                     show_alert=True
                 )
             else:
@@ -175,14 +176,13 @@ async def change_category_by_date(message: types.Message) -> None:
             # Create buttons for each expense
             buttons = []
             for expense in expenses:
-                button_text = (
-                    f"{expense.amount:.2f} UAH - {expense.category.name}"
-                    f"{f' ({expense.description})' if expense.description else ''}"
-                )
+                button_text = f"{expense['amount']:.2f} UAH - {expense['category']['name']}"
+                if expense['description']:
+                    button_text += f" ({expense['description']})"
                 buttons.append([
                     InlineKeyboardButton(
                         text=button_text,
-                        callback_data=f"change_{expense.id}"
+                        callback_data=f"change_{expense['id']}"
                     )
                 ])
 
@@ -226,11 +226,11 @@ async def process_expense_selection_for_change(callback: types.CallbackQuery) ->
             )
 
             # Format message with current expense details
-            description_text = f" - {expense.description}" if expense.description else ""
+            description_text = f" - {expense['description']}" if expense['description'] else ""
             await callback.message.edit_text(
-                f"Current category: {expense.category.name}\n"
-                f"Amount: {expense.amount:.2f} UAH{description_text}\n"
-                f"Date: {expense.day:02d}.{expense.month:02d}.{expense.year}\n\n"
+                f"Current category: {expense['category']['name']}\n"
+                f"Amount: {expense['amount']:.2f} UAH{description_text}\n"
+                f"Date: {expense['day']:02d}.{expense['month']:02d}.{expense['year']}\n\n"
                 f"Select new category:",
                 reply_markup=keyboard
             )
@@ -263,21 +263,30 @@ async def process_category_change(callback: types.CallbackQuery) -> None:
                 return
 
             # Save current category name before update
-            old_category = expense.category.name
+            old_category = expense['category']['name']
 
             # Update category
-            expense.category_id = category_id
-            await session.commit()
+            updated_expense = await update_expense_category(
+                session,
+                expense_id,
+                category_id,
+                callback.from_user.id
+            )
+
+            if not updated_expense:
+                await callback.message.edit_text("❌ Failed to update expense category")
+                return
 
             # Format confirmation message
-            description_text = f" - {expense.description}" if expense.description else ""
+            description_text = f" - {updated_expense['description']}" if updated_expense['description'] else ""
             await callback.message.edit_text(
                 f"✅ Category changed successfully!\n\n"
-                f"Amount: {expense.amount:.2f} UAH{description_text}\n"
-                f"Date: {expense.day:02d}.{expense.month:02d}.{expense.year}\n"
+                f"Amount: {updated_expense['amount']:.2f} UAH{description_text}\n"
+                f"Date: {updated_expense['day']:02d}.{updated_expense['month']:02d}.{updated_expense['year']}\n"
                 f"Old category: {old_category}\n"
-                f"New category: {new_category.name}"
+                f"New category: {new_category['name']}"
             )
+
 
     except Exception as e:
         logger.error(f"Error in process_category_change: {e}")
@@ -299,14 +308,14 @@ async def change_last_expense_category(message: types.Message) -> None:
             # Use the existing category change flow
             keyboard = await create_category_selection_keyboard_for_change(
                 message.from_user.id,
-                str(last_expense.id)
+                str(last_expense['id'])
             )
 
-            description_text = f" - {last_expense.description}" if last_expense.description else ""
+            description_text = f" - {last_expense['description']}" if last_expense['description'] else ""
             await message.answer(
-                f"Current category: {last_expense.category.name}\n"
-                f"Amount: {last_expense.amount:.2f} UAH{description_text}\n"
-                f"Date: {last_expense.day:02d}.{last_expense.month:02d}.{last_expense.year}\n\n"
+                f"Current category: {last_expense['category']['name']}\n"
+                f"Amount: {last_expense['amount']:.2f} UAH{description_text}\n"
+                f"Date: {last_expense['day']:02d}.{last_expense['month']:02d}.{last_expense['year']}\n\n"
                 "Select new category:",
                 reply_markup=keyboard
             )

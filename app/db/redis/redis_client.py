@@ -4,6 +4,7 @@ import logging
 from typing import Optional, Callable
 
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 
@@ -29,16 +30,19 @@ def redis_cache(
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
+            # Skip first argument if it's an AsyncSession
+            cache_args = args[1:] if args and isinstance(args[0], AsyncSession) else args
+
             # Build cache key
             if key_builder:
-                cache_key = key_builder(*args, **kwargs)
+                cache_key = key_builder(*cache_args, **kwargs)
             else:
                 # Default key building: combine prefix, function name and arguments
                 key_parts = [prefix, func.__name__]
 
                 # Add positional args to key
-                if args:
-                    key_parts.extend(str(arg) for arg in args)
+                if cache_args:
+                    key_parts.extend(str(arg) for arg in cache_args)
 
                 # Add keyword args to key
                 if kwargs:
@@ -73,12 +77,13 @@ def redis_cache(
 
         # Add helper method to invalidate cache
         async def invalidate_cache(*args, **kwargs):
+            cache_args = args[1:] if args and isinstance(args[0], AsyncSession) else args
             if key_builder:
-                cache_key = key_builder(*args, **kwargs)
+                cache_key = key_builder(*cache_args, **kwargs)
             else:
                 key_parts = [prefix, func.__name__]
-                if args:
-                    key_parts.extend(str(arg) for arg in args)
+                if cache_args:
+                    key_parts.extend(str(arg) for arg in cache_args)
                 if kwargs:
                     key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
                 cache_key = ":".join(key_parts)
@@ -87,5 +92,4 @@ def redis_cache(
 
         wrapper.invalidate_cache = invalidate_cache
         return wrapper
-
     return decorator

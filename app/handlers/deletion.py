@@ -4,10 +4,8 @@ from datetime import datetime, timedelta
 from aiogram import types
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from app.db.models import get_async_session
-from app.db.repositories.expense_repository import (
-    get_expenses_by_date, delete_expense_by_id,
-    get_expense_by_id, get_last_expenses
-)
+from app.db.repositories.expense_repository import get_expenses_by_date, delete_expense_by_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +32,15 @@ async def show_delete_dates(message: types.Message) -> None:
 
         buttons = []
         for expense in expenses:
+            description = expense['description'] if expense['description'] else ''
             button_text = (
-                f"{expense.amount:.2f} UAH - {expense.description} "
-                f"({expense.day:02d}.{expense.month:02d}.{expense.year})"
+                f"{expense['amount']:.2f} UAH - {description} "
+                f"({expense['day']:02d}.{expense['month']:02d}.{expense['year']})"
             )
             buttons.append([
                 InlineKeyboardButton(
                     text=button_text,
-                    callback_data=f"del_{expense.id}"
+                    callback_data=f"del_{expense['id']}"
                 )
             ])
 
@@ -75,14 +74,15 @@ async def delete_expense(callback: types.CallbackQuery) -> None:
                 if remaining_expenses:
                     buttons = []
                     for expense in remaining_expenses:
+                        description = expense['description'] if expense['description'] else ''
                         button_text = (
-                            f"{expense.amount:.2f} UAH - {expense.description} "
-                            f"({expense.day:02d}.{expense.month:02d}.{expense.year})"
+                            f"{expense['amount']:.2f} UAH - {description} "
+                            f"({expense['day']:02d}.{expense['month']:02d}.{expense['year']})"
                         )
                         buttons.append([
                             InlineKeyboardButton(
                                 text=button_text,
-                                callback_data=f"del_{expense.id}"
+                                callback_data=f"del_{expense['id']}"
                             )
                         ])
                     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -123,11 +123,14 @@ async def delete_by_date(message: types.Message) -> None:
 
             buttons = []
             for expense in expenses:
-                button_text = f"{expense.amount:.2f} UAH - {expense.description}"
+                button_text = (
+                    f"{expense['amount']:.2f} UAH - "
+                    f"{expense['description'] if expense['description'] else ''}"
+                )
                 buttons.append([
                     InlineKeyboardButton(
                         text=button_text,
-                        callback_data=f"del_{expense.id}"
+                        callback_data=f"del_{expense['id']}"
                     )
                 ])
 

@@ -93,7 +93,7 @@ async def process_category_selection(callback: types.CallbackQuery) -> None:
             )
 
             categories = await get_user_categories(session, callback.from_user.id)
-            category_name = next(cat.name for cat in categories if cat.id == category_id)
+            category_name = next(cat['name'] for cat in categories if cat['id'] == category_id)
 
             message = f"✅ Recorded: {amount:.2f} UAH"
             if description:

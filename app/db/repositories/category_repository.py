@@ -7,21 +7,38 @@ from app.db.redis.redis_client import redis_cache
 
 
 @redis_cache(prefix="categories", expire=3600)
-async def get_user_categories(session: AsyncSession, user_id: int) -> List[Category]:
+async def get_user_categories(session: AsyncSession, user_id: int) -> List[Dict]:
     """Get all categories for a user."""
     query = select(Category).where(Category.user_id == user_id).order_by(Category.name)
     result = await session.execute(query)
-    return result.scalars().all()
+    categories = result.scalars().all()
+
+    # Convert to list of dictionaries for JSON serialization
+    return [{
+        "id": cat.id,
+        "name": cat.name,
+        "user_id": cat.user_id,
+        "created_at": cat.created_at.isoformat() if cat.created_at else None
+    } for cat in categories]
 
 
 @redis_cache(prefix="category", expire=1800)
-async def get_category_by_id(session: AsyncSession, category_id: int, user_id: int) -> Optional[Category]:
+async def get_category_by_id(session: AsyncSession, category_id: int, user_id: int) -> Optional[Dict]:
     """Get specific category by ID for a user."""
     query = select(Category).where(
         and_(Category.id == category_id, Category.user_id == user_id)
     )
     result = await session.execute(query)
-    return result.scalar_one_or_none()
+    category = result.scalar_one_or_none()
+
+    if category:
+        return {
+            "id": category.id,
+            "name": category.name,
+            "user_id": category.user_id,
+            "created_at": category.created_at.isoformat() if category.created_at else None
+        }
+    return None
 
 
 async def add_category(session: AsyncSession, user_id: int, name: str) -> Category:

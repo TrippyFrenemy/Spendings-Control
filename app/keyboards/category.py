@@ -1,16 +1,16 @@
-from typing import List
+from typing import List, Dict
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from app.db.models import Category, get_async_session
+from app.db.models import get_async_session
 from app.db.repositories.category_repository import get_user_categories
 
 
-async def create_category_management_keyboard(categories: List[Category]) -> InlineKeyboardMarkup:
+async def create_category_management_keyboard(categories: List[Dict]) -> InlineKeyboardMarkup:
     """Creates keyboard for category management with delete buttons."""
     buttons = []
     for category in categories:
         buttons.append([
-            InlineKeyboardButton(text=f"📁 {category.name}", callback_data=f"view_cat_{category.id}"),
-            InlineKeyboardButton(text="❌", callback_data=f"del_cat_{category.id}")
+            InlineKeyboardButton(text=f"📁 {category['name']}", callback_data=f"view_cat_{category['id']}"),
+            InlineKeyboardButton(text="❌", callback_data=f"del_cat_{category['id']}")
         ])
 
     buttons.append([InlineKeyboardButton(
@@ -31,8 +31,8 @@ async def create_category_selection_keyboard(user_id: int, expense_data: str) ->
             row = []
             for category in categories[i:i + 2]:
                 row.append(InlineKeyboardButton(
-                    text=category.name,
-                    callback_data=f"cat_{category.id}_{expense_data}"
+                    text=category['name'],
+                    callback_data=f"cat_{category['id']}_{expense_data}"
                 ))
             buttons.append(row)
 
@@ -54,8 +54,8 @@ async def create_category_selection_keyboard_for_change(user_id: int, expense_id
             row = []
             for category in categories[i:i + 2]:
                 row.append(InlineKeyboardButton(
-                    text=category.name,
-                    callback_data=f"catchange_{category.id}_{expense_id}"
+                    text=category['name'],
+                    callback_data=f"catchange_{category['id']}_{expense_id}"
                 ))
             buttons.append(row)
 

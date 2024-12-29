@@ -152,6 +152,9 @@ Cost-Control/
    DB_PASS=your_db_password
    DB_HOST=localhost
    DB_NAME=your_db_name
+   REDIS_HOST=your_redis_host
+   REDIS_PORT=your_redis_port
+   REDIS_PASSWORD=your_redis_password
    ```
 
 4. **Running the Bot**
