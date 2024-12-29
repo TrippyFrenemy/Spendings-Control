@@ -15,9 +15,10 @@ def register_all_handlers(dp: Dispatcher) -> None:
     dp.message.register(cmd_start, Command("start"))
     dp.message.register(delete_by_date, Command("delete"))
     dp.message.register(change_category_by_date, Command("change"))
+
+    dp.message.register(select_daily_breakdown, F.text == '📈 Daily Report')
     dp.message.register(select_period, F.text.in_(['📊 Monthly Report']))
     dp.message.register(show_year_selection, F.text == '📅 Yearly Report')
-    dp.message.register(select_daily_breakdown, F.text == '📈 Daily Breakdown')  # New handler
     dp.message.register(show_delete_dates, F.text == '❌ Delete Expense')
     dp.message.register(total_spent, F.text == '💰 Total Spent')
     dp.message.register(last_expenses, F.text == '🔍 Last 5 Expenses')
@@ -42,4 +43,3 @@ def register_all_handlers(dp: Dispatcher) -> None:
 
     # Default handler for expense recording
     dp.message.register(handle_expense)
-
