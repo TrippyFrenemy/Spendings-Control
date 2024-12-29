@@ -84,27 +84,40 @@ async def update_category(session: AsyncSession, category_id: int, user_id: int,
 
 
 async def delete_category(session: AsyncSession, category_id: int, user_id: int,
-                          new_category_id: Optional[int] = None) -> bool:
+                    new_category_id: Optional[int] = None) -> bool:
     """Delete category and optionally move its expenses to another category."""
-    category = await get_category_by_id(session, category_id, user_id)
+    # First get the actual Category model instance
+    query = select(Category).where(
+        and_(Category.id == category_id, Category.user_id == user_id)
+    )
+    result = await session.execute(query)
+    category = result.scalar_one_or_none()
+
     if not category:
         return False
 
     if new_category_id:
-        new_category = await get_category_by_id(session, new_category_id, user_id)
+        # Get the actual new Category model instance
+        new_cat_query = select(Category).where(
+            and_(Category.id == new_category_id, Category.user_id == user_id)
+        )
+        new_cat_result = await session.execute(new_cat_query)
+        new_category = new_cat_result.scalar_one_or_none()
         if not new_category:
             return False
     else:
-        query = select(Category).where(
+        # Find or create "Other" category
+        other_query = select(Category).where(
             and_(Category.user_id == user_id, Category.name == "Other")
         )
-        result = await session.execute(query)
+        result = await session.execute(other_query)
         new_category = result.scalar_one_or_none()
         if not new_category:
             new_category = Category(user_id=user_id, name="Other")
             session.add(new_category)
             await session.commit()
 
+    # Update expenses to new category
     query = select(Expense).where(
         and_(Expense.category_id == category_id, Expense.user_id == user_id)
     )
@@ -114,6 +127,7 @@ async def delete_category(session: AsyncSession, category_id: int, user_id: int,
     for expense in expenses:
         expense.category_id = new_category.id
 
+    # Delete the category
     await session.delete(category)
     await session.commit()
 
