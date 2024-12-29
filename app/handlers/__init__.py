@@ -8,7 +8,7 @@ from app.handlers.category import manage_categories, start_new_category, delete_
 from app.handlers.deletion import delete_by_date, show_delete_dates, delete_expense
 from app.handlers.expense import handle_expense, process_category_selection
 from app.handlers.reports import select_period, show_year_selection, total_spent, last_expenses, process_year_selection, \
-    process_month_selection, back_to_years
+    process_month_selection, back_to_years, process_report_type
 
 
 def register_all_handlers(dp: Dispatcher) -> None:
@@ -36,6 +36,8 @@ def register_all_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(back_to_years, F.data == "back_to_years")
     dp.callback_query.register(process_month_selection, F.data.startswith("month_"))
     dp.callback_query.register(delete_expense, F.data.startswith("del_"))
+
+    dp.callback_query.register(process_report_type, F.data.startswith("report_"))
 
     # Default handler for expense recording
     dp.message.register(handle_expense)

@@ -40,3 +40,22 @@ def create_month_keyboard(year: int) -> InlineKeyboardMarkup:
         callback_data="back_to_years"
     )])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def create_report_type_keyboard(year: int, month: int) -> InlineKeyboardMarkup:
+    """Creates keyboard for selecting report type."""
+    buttons = [
+        [InlineKeyboardButton(
+            text="Monthly Summary",
+            callback_data=f"report_monthly_{year}_{month}"
+        )],
+        [InlineKeyboardButton(
+            text="Daily Breakdown",
+            callback_data=f"report_daily_{year}_{month}"
+        )],
+        [InlineKeyboardButton(
+            text="◀️ Back to months",
+            callback_data=f"year_{year}"
+        )]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

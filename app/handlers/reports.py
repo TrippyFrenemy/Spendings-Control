@@ -1,10 +1,12 @@
+import calendar
 import logging
 from aiogram import types
 from app.db.models import get_async_session
 from app.db.repositories.user_repository import get_total_spent
 from app.db.repositories.expense_repository import get_last_expenses
 from app.keyboards import create_year_keyboard, create_month_keyboard
-from app.spendings import generate_monthly_report, generate_yearly_report
+from app.keyboards.reports import create_report_type_keyboard
+from app.spendings import generate_monthly_report, generate_yearly_report, generate_daily_report
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +35,25 @@ async def process_year_selection(callback: types.CallbackQuery) -> None:
 
 
 async def process_month_selection(callback: types.CallbackQuery) -> None:
-    """Processes month selection and generates monthly report."""
+    """Processes month selection and shows report type options."""
     _, year, month = callback.data.split('_')
     year, month = int(year), int(month)
 
-    async with get_async_session() as session:
+    await callback.message.edit_text(
+        f"Selected: {calendar.month_name[month]} {year}\nChoose report type:",
+        reply_markup=create_report_type_keyboard(year, month)
+    )
+
+
+async def process_report_type(callback: types.CallbackQuery) -> None:
+    """Processes report type selection and generates appropriate report."""
+    _, report_type, year, month = callback.data.split('_')
+    year, month = int(year), int(month)
+
+    if report_type == 'monthly':
         await generate_monthly_report(callback.message, year, month)
+    elif report_type == 'daily':
+        await generate_daily_report(callback.message, year, month)
 
     await callback.message.delete()
 

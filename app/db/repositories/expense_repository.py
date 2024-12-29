@@ -57,6 +57,30 @@ async def get_expense_by_id(session: AsyncSession, expense_id: int) -> Optional[
     return result.scalar_one_or_none()
 
 
+async def get_daily_expenses(session: AsyncSession, user_id: int, year: int, month: int) -> List[Tuple[int, str, float]]:
+    """Get daily expenses by category for a specific month."""
+    query = select(
+        Expense.day,
+        Category.name.label('category'),
+        func.sum(Expense.amount).label('total')
+    ).join(Category).where(
+        and_(
+            Expense.user_id == user_id,
+            Expense.year == year,
+            Expense.month == month
+        )
+    ).group_by(
+        Expense.day,
+        Category.name
+    ).order_by(
+        Expense.day.asc(),
+        Category.name.asc()
+    )
+
+    result = await session.execute(query)
+    return result.all()
+
+
 async def get_monthly_expenses(session: AsyncSession, user_id: int, year: int, month: int) -> List[Tuple[str, float]]:
     """Get total expenses by category for a specific month."""
     query = select(
