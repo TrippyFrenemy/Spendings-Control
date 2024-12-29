@@ -8,7 +8,7 @@ from app.handlers.category import manage_categories, start_new_category, delete_
 from app.handlers.deletion import delete_by_date, show_delete_dates, delete_expense
 from app.handlers.expense import handle_expense, process_category_selection
 from app.handlers.reports import select_period, show_year_selection, total_spent, last_expenses, process_year_selection, \
-    process_month_selection, back_to_years, process_report_type
+    process_month_selection, back_to_years, process_daily_month_selection, select_daily_breakdown
 
 
 def register_all_handlers(dp: Dispatcher) -> None:
@@ -17,6 +17,7 @@ def register_all_handlers(dp: Dispatcher) -> None:
     dp.message.register(change_category_by_date, Command("change"))
     dp.message.register(select_period, F.text.in_(['📊 Monthly Report']))
     dp.message.register(show_year_selection, F.text == '📅 Yearly Report')
+    dp.message.register(select_daily_breakdown, F.text == '📈 Daily Breakdown')  # New handler
     dp.message.register(show_delete_dates, F.text == '❌ Delete Expense')
     dp.message.register(total_spent, F.text == '💰 Total Spent')
     dp.message.register(last_expenses, F.text == '🔍 Last 5 Expenses')
@@ -37,7 +38,7 @@ def register_all_handlers(dp: Dispatcher) -> None:
     dp.callback_query.register(process_month_selection, F.data.startswith("month_"))
     dp.callback_query.register(delete_expense, F.data.startswith("del_"))
 
-    dp.callback_query.register(process_report_type, F.data.startswith("report_"))
+    dp.callback_query.register(process_daily_month_selection, F.data.startswith("daily_month_"))  # New handler
 
     # Default handler for expense recording
     dp.message.register(handle_expense)
