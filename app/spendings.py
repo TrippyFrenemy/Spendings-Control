@@ -8,6 +8,7 @@ from aiogram.types import BufferedInputFile, Message
 from app.db.models import get_async_session
 from app.db.redis.redis_client import redis
 from app.db.repositories.expense_repository import get_yearly_expenses, get_monthly_expenses, get_daily_expenses
+from app.db.repositories.income_repository import get_daily_incomes, get_monthly_incomes
 
 logger = logging.getLogger(__name__)
 
@@ -331,3 +332,96 @@ async def generate_daily_summary(daily_data: list, year: int, month: int) -> str
         summary += f"\nHighest spending day: {max_day} ({daily_totals[max_day]:.2f} UAH)"
 
     return summary
+
+
+async def generate_income_expense_daily_graph(
+    message: Message, year: int, month: int
+) -> None:
+    """Generate daily income vs expense graph for a month."""
+    user_id = message.chat.id
+    async with get_async_session() as session:
+        expense_data = await get_daily_expenses(session, user_id, year, month)
+        income_data = await get_daily_incomes(session, user_id, year, month)
+
+    exp_df = pd.DataFrame(expense_data)
+    exp_totals = exp_df.groupby("day")["total"].sum() if not exp_df.empty else pd.Series(dtype=float)
+    inc_df = pd.DataFrame(income_data)
+    inc_totals = inc_df.set_index("day")["total"] if not inc_df.empty else pd.Series(dtype=float)
+
+    days_in_month = calendar.monthrange(year, month)[1]
+    days = list(range(1, days_in_month + 1))
+    expenses = [float(exp_totals.get(d, 0)) for d in days]
+    incomes = [float(inc_totals.get(d, 0)) for d in days]
+
+    if not any(expenses) and not any(incomes):
+        await message.answer(f"No data for {calendar.month_name[month]} {year}")
+        return
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(days, expenses, label="Expenses", marker="o")
+    plt.plot(days, incomes, label="Incomes", marker="o")
+    plt.title(
+        f"Incomes vs Expenses - {calendar.month_name[month]} {year}", pad=20, fontsize=14
+    )
+    plt.xlabel("Day", fontsize=12)
+    plt.ylabel("Amount (UAH)", fontsize=12)
+    plt.xticks(days, rotation=45)
+    plt.grid(axis="both", linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+    buf.seek(0)
+    image_data = buf.getvalue()
+    plt.close()
+
+    await message.answer_photo(
+        BufferedInputFile(image_data, filename=f"ie_daily_{message.chat.id}.png"),
+        caption=f"Daily incomes and expenses for {calendar.month_name[month]} {year}",
+    )
+
+
+async def generate_income_expense_monthly_graph(message: Message, year: int) -> None:
+    """Generate monthly income vs expense graph for a year."""
+    user_id = message.chat.id
+    async with get_async_session() as session:
+        expense_data = await get_yearly_expenses(session, user_id, year)
+        income_data = await get_monthly_incomes(session, user_id, year)
+
+    exp_df = pd.DataFrame(expense_data)
+    exp_totals = exp_df.groupby("month")["total"].sum() if not exp_df.empty else pd.Series(dtype=float)
+    inc_df = pd.DataFrame(income_data)
+    inc_totals = inc_df.set_index("month")["total"] if not inc_df.empty else pd.Series(dtype=float)
+
+    months = list(range(1, 13))
+    expenses = [float(exp_totals.get(m, 0)) for m in months]
+    incomes = [float(inc_totals.get(m, 0)) for m in months]
+
+    if not any(expenses) and not any(incomes):
+        await message.answer(f"No data for {year}")
+        return
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(months, expenses, label="Expenses", marker="o")
+    plt.plot(months, incomes, label="Incomes", marker="o")
+    plt.title(f"Incomes vs Expenses - {year}", pad=20, fontsize=14)
+    plt.xlabel("Month", fontsize=12)
+    plt.ylabel("Amount (UAH)", fontsize=12)
+    month_names = [calendar.month_abbr[m] for m in months]
+    plt.xticks(months, month_names, rotation=45)
+    plt.grid(axis="both", linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+    buf.seek(0)
+    image_data = buf.getvalue()
+    plt.close()
+
+    await message.answer_photo(
+        BufferedInputFile(image_data, filename=f"ie_monthly_{message.chat.id}.png"),
+        caption=f"Monthly incomes and expenses for {year}",
+    )
+    

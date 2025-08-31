@@ -1,4 +1,5 @@
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.redis.redis_client import redis
 from app.db.redis.report_image_cache import invalidate_report_images
@@ -33,6 +34,29 @@ async def invalidate_expense_caches(session: AsyncSession, user_id: int, year: O
 
     # Also invalidate report images
     await invalidate_report_images(user_id, year, month)
+
+
+async def invalidate_income_caches(
+    session: AsyncSession, user_id: int, year: Optional[int] = None, month: Optional[int] = None
+):
+    """Invalidate all income-related caches for a user."""
+    patterns = [
+        f"total_income:*{user_id}*",  # Total income cache
+        f"last_incomes:*{user_id}*",  # Last incomes cache
+    ]
+
+    if year:
+        patterns.append(f"monthly_income:*{user_id}*{year}*")
+        if month:
+            patterns.extend([
+                f"daily_income:*{user_id}*{year}*{month}*",
+                f"incomes_by_date:*{user_id}*{year}*{month}*",
+            ])
+
+    for pattern in patterns:
+        keys = await redis.keys(pattern)
+        if keys:
+            await redis.delete(*keys)
 
 
 async def invalidate_category_caches(session: AsyncSession, user_id: int):

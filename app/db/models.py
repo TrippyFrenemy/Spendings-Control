@@ -19,8 +19,9 @@ class User(Base):
 
     id = Column(BigInteger, primary_key=True)  # Telegram user id
     username = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
     categories = relationship("Category", back_populates="user")
+    incomes = relationship("Income", back_populates="user")
 
 
 class Category(Base):
@@ -29,7 +30,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
     user = relationship("User", back_populates="categories")
     expenses = relationship("Expense", back_populates="category")
@@ -50,7 +51,7 @@ class Expense(Base):
     year = Column(Integer, nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(String, nullable=True)  # Optional description field
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
     category = relationship("Category", back_populates="expenses")
 
@@ -58,6 +59,27 @@ class Expense(Base):
         Index('idx_expense_user_year', 'user_id', 'year'),
         Index('idx_expense_user_year_month', 'user_id', 'year', 'month'),
         Index('idx_expense_date', 'user_id', 'year', 'month', 'day'),
+    )
+
+
+class Income(Base):
+    __tablename__ = 'incomes'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    day = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="incomes")
+
+    __table_args__ = (
+        Index('idx_income_user_year', 'user_id', 'year'),
+        Index('idx_income_user_year_month', 'user_id', 'year', 'month'),
+        Index('idx_income_date', 'user_id', 'year', 'month', 'day'),
     )
 
 
