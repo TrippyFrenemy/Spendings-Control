@@ -95,6 +95,8 @@ Use "📝 Manage Categories" to:
 - Change expense categories
 
 ### Quick Actions
+- ➕ Add Expense: Start guided expense entr6y
+- ➕ Add Income: Start guided income entry
 - 💰 Total Spent: View total expenses across all time
 - 🔍 Last 5 Expenses: Quick overview of recent spending (or use `/expenses`)
 - 💵 Total Income: View total recorded income
