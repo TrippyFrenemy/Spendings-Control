@@ -6,10 +6,8 @@ services:
     restart: always
     entrypoint: ["./scripts/entrypoint.sh"]
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - redis
+      - db
     env_file:
       - .env
     environment:
@@ -33,10 +31,8 @@ services:
     command: celery -A app.tasks.celery_app.celery_app worker -l info
     restart: always
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - redis
+      - db
     env_file:
       - .env
     environment:
@@ -59,10 +55,8 @@ services:
     command: celery -A app.tasks.celery_app.celery_app beat -l info
     restart: always
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - redis
+      - db
     env_file:
       - .env
     environment:
