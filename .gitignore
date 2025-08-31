@@ -162,3 +162,5 @@ cython_debug/
 .idea/
 migration/versions/
 logs/
+backup.sql
+temp/

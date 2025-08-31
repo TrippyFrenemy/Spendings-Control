@@ -22,8 +22,4 @@ COPY . .
 # Create directory for logs
 RUN mkdir -p /app/logs
 
-CMD ["alembic", "revision"]
-CMD ["alembic", "revision", "--autogenerate"]
-CMD ["alembic", "upgrade", "head"]
-# Command to run the application
-CMD ["python", "main.py"]
+RUN chmod +x ./scripts/entrypoint.sh
